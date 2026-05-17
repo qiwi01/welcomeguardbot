@@ -1,0 +1,134 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0"><i class="bi bi-person"></i> User Details</h4>
+  <a href="/admin/users" class="btn btn-sm btn-outline-secondary">← Back to Users</a>
+</div>
+
+<div class="row g-3">
+  <!-- User Info Card -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <div class="display-1 mb-2"><%= user.first_name.charAt(0).toUpperCase() %></div>
+        <h5 class="mb-1"><%= user.first_name %></h5>
+        <% if (user.username) { %><p class="text-muted mb-2">@<%= user.username %></p><% } %>
+        <p class="mb-1"><small class="text-muted">Telegram ID:</small> <code><%= user.telegram_id %></code></p>
+        <p class="mb-1"><small class="text-muted">Email:</small> <%= user.email || '—' %></p>
+        <p class="mb-1"><small class="text-muted">Phone:</small> <%= user.phone || '—' %></p>
+        <p class="mb-1"><small class="text-muted">Role:</small> <strong><%= user.role %></strong></p>
+        <p class="mb-0"><small class="text-muted">Joined:</small> <%= new Date(user.created_at).toLocaleString() %></p>
+        <% if (user.verified_at) { %><p class="mb-0"><small class="text-muted">Verified:</small> <%= new Date(user.verified_at).toLocaleString() %></p><% } %>
+        <p class="mb-0"><small class="text-muted">Last Active:</small> <%= new Date(user.last_active_at).toLocaleString() %></p>
+
+        <hr>
+        <span class="badge bg-<%= user.status === 'verified' ? 'success' : user.status === 'pending' ? 'warning text-dark' : user.status === 'rejected' ? 'danger' : 'dark' %> fs-6">
+          <%= user.status.toUpperCase() %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Card -->
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header"><i class="bi bi-gear"></i> Actions</div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-3">
+            <form method="POST" action="/admin/users/<%= user.telegram_id %>/action">
+              <input type="hidden" name="action" value="verified">
+              <input type="hidden" name="notes" value="Approved by admin">
+              <button type="submit" class="btn btn-success w-100" <%= user.status === 'verified' ? 'disabled' : '' %>>
+                <i class="bi bi-check-lg"></i> Approve
+              </button>
+            </form>
+          </div>
+          <div class="col-md-3">
+            <form method="POST" action="/admin/users/<%= user.telegram_id %>/action">
+              <input type="hidden" name="action" value="pending">
+              <input type="hidden" name="notes" value="Reset to pending by admin">
+              <button type="submit" class="btn btn-warning w-100" <%= user.status === 'pending' ? 'disabled' : '' %>>
+                <i class="bi bi-arrow-counterclockwise"></i> Reset
+              </button>
+            </form>
+          </div>
+          <div class="col-md-3">
+            <form method="POST" action="/admin/users/<%= user.telegram_id %>/action">
+              <input type="hidden" name="action" value="rejected">
+              <input type="hidden" name="notes" value="Rejected by admin">
+              <button type="submit" class="btn btn-danger w-100" <%= user.status === 'rejected' ? 'disabled' : '' %>>
+                <i class="bi bi-x-lg"></i> Reject
+              </button>
+            </form>
+          </div>
+          <div class="col-md-3">
+            <form method="POST" action="/admin/users/<%= user.telegram_id %>/action">
+              <input type="hidden" name="action" value="banned">
+              <input type="hidden" name="notes" value="Banned by admin">
+              <button type="submit" class="btn btn-dark w-100" <%= user.status === 'banned' ? 'disabled' : '' %>>
+                <i class="bi bi-slash-circle"></i> Ban
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <hr>
+        <form method="POST" action="/admin/users/<%= user.telegram_id %>/action" class="row g-2">
+          <div class="col">
+            <input type="text" name="notes" class="form-control form-control-sm" placeholder="Custom note for action...">
+          </div>
+          <div class="col-auto">
+            <select name="action" class="form-select form-select-sm">
+              <option value="verified">✅ Approve</option>
+              <option value="rejected">❌ Reject</option>
+              <option value="banned">🚫 Ban</option>
+              <option value="pending">⏳ Reset to Pending</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-sm btn-outline-primary">Apply with Note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="card">
+      <div class="card-header"><i class="bi bi-clock-history"></i> Activity Log</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Action</th>
+              <th>Notes</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td>
+                  <% if (log.action === 'verified') { %>
+                    <span class="badge bg-success">Approved</span>
+                  <% } else if (log.action === 'rejected') { %>
+                    <span class="badge bg-danger">Rejected</span>
+                  <% } else if (log.action === 'requested') { %>
+                    <span class="badge bg-info">Registered</span>
+                  <% } else if (log.action === 'banned') { %>
+                    <span class="badge bg-dark">Banned</span>
+                  <% } else { %>
+                    <span class="badge bg-secondary"><%= log.action %></span>
+                  <% } %>
+                </td>
+                <td><small><%= log.notes || '—' %></small></td>
+                <td><small class="text-muted"><%= new Date(log.created_at).toLocaleString() %></small></td>
+              </tr>
+            <% }) %>
+            <% if (logs.length === 0) { %>
+              <tr><td colspan="3" class="text-center text-muted py-3">No activity recorded</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

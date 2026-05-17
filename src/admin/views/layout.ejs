@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WelcomeGuardBot Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    body { background: #f5f7fb; font-size: .9rem; }
+    .sidebar { background: #1a1d23; min-height: 100vh; }
+    .sidebar .nav-link { color: #8b8e96; padding: .7rem 1rem; border-radius: 8px; margin-bottom: 2px; }
+    .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: #2a2d35; }
+    .sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
+    .stat-card { border-radius: 12px; border: none; transition: transform .15s; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .stat-icon { font-size: 2rem; opacity: .8; }
+    .badge-status { font-size: .75rem; padding: .35em .65em; }
+    .table-hover tbody tr { cursor: pointer; }
+    .footer-bar { background: #fff; border-top: 1px solid #e9ecef; padding: 12px 0; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-2 sidebar p-3 d-none d-md-block">
+        <div class="text-white mb-4 mt-2">
+          <h5><i class="bi bi-shield-check"></i> WGB Admin</h5>
+        </div>
+        <nav class="nav flex-column">
+          <a class="nav-link" href="/admin"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          <a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Users</a>
+          <a class="nav-link" href="/admin/broadcast"><i class="bi bi-megaphone"></i> Broadcast</a>
+          <a class="nav-link" href="/admin/logs"><i class="bi bi-clock-history"></i> Logs</a>
+          <hr class="text-secondary">
+          <a class="nav-link" href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        </nav>
+        <div class="mt-auto text-secondary small position-absolute" style="bottom: 20px;">
+          v1.0.0
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-md-10 ms-auto p-4">
+        <%- body %>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

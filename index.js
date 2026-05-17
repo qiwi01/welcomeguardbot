@@ -1,60 +1,112 @@
 require('dotenv').config();
+const path = require('path');
+const express = require('express');
+const session = require('express-session');
 const { Telegraf } = require('telegraf');
+const { initDB, pool } = require('./src/db');
+const { ensureFirstUserIsAdmin } = require('./src/db/queries');
 
+// --- Initialize DB ---
+initDB().then(() => {
+  ensureFirstUserIsAdmin();
+});
+
+// --- Telegram Bot Setup ---
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// In-memory storage (replace with DB later)
-const users = new Map();
+// Import handlers
+const welcomeHandler = require('./src/bot/welcome');
+const { verifyCommand, verifyCallback } = require('./src/bot/verify');
+const { helpCommand, statusCommand, profileCommand, showProfileCallback } = require('./src/bot/handlers');
+const { handleVerificationInput } = require('./src/bot/verify');
 
-bot.start(async (ctx) => {
-  const userId = ctx.from.id;
-  users.set(userId, { verified: false, username: ctx.from.username || ctx.from.first_name });
+// Bot commands
+bot.start(welcomeHandler);
+bot.command('verify', verifyCommand);
+bot.command('status', statusCommand);
+bot.command('profile', profileCommand);
+bot.command('help', helpCommand);
 
-  await ctx.reply(
-    `👋 Welcome to Demo Bot, ${ctx.from.first_name}!\n\n` +
-    `Please verify yourself to access all features.`,
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "✅ Verify Account", callback_data: "verify_user" }]
-        ]
-      }
+// Callback actions
+bot.action('start_verify', verifyCallback);
+bot.action('show_profile', showProfileCallback);
+
+// Handle verification form text input
+bot.on('text', async (ctx, next) => {
+  const handled = await handleVerificationInput(ctx);
+  if (!handled) return next();
+});
+
+// --- Express Admin Dashboard ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+const SESSION_SECRET = process.env.SESSION_SECRET || 'welcomeguardbot-secret-change-me';
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(session({
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 1 day
+}));
+
+// View engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'src/admin/views'));
+
+// Admin routes
+const adminRoutes = require('./src/admin/routes/dashboard');
+app.use('/admin', adminRoutes);
+
+// Root redirect
+app.get('/', (req, res) => {
+  res.redirect('/admin/login');
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// --- Launch ---
+// Start Express first, then Telegram bot
+app.listen(PORT, async () => {
+  console.log(`📊 Admin Dashboard running on http://localhost:${PORT}`);
+
+  // Launch Telegram bot (polling mode for local, webhook for Railway)
+  const webhookDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+  if (webhookDomain) {
+    try {
+      await bot.launch({
+        webhook: {
+          domain: webhookDomain,
+          port: PORT,
+          secretToken: process.env.WEBHOOK_SECRET,
+        },
+      });
+      console.log(`🤖 Telegram Bot running on webhook: ${webhookDomain}`);
+    } catch (err) {
+      console.error('❌ Webhook launch failed, falling back to polling:', err.message);
+      await bot.launch();
     }
-  );
-});
-
-bot.action('verify_user', async (ctx) => {
-  const userId = ctx.from.id;
-  users.set(userId, { verified: true });
-
-  await ctx.editMessageText(
-    `✅ Verification Successful!\n\n` +
-    `Welcome aboard, ${ctx.from.first_name}! 🎉\n` +
-    `You are now a verified user.`
-  );
-});
-
-bot.command('status', async (ctx) => {
-  const user = users.get(ctx.from.id);
-  if (user?.verified) {
-    await ctx.reply("🟢 You are Verified");
   } else {
-    await ctx.reply("🔴 Please verify first");
+    await bot.launch();
+    console.log('🤖 Telegram Bot running in polling mode');
   }
+
+  console.log(`🚀 WelcomeGuardBot fully operational!`);
 });
 
-// Auto-detect: use webhook if RAILWAY_PUBLIC_DOMAIN is set, otherwise use polling (local dev)
-const webhookDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
-if (webhookDomain) {
-  bot.launch({
-    webhook: {
-      domain: webhookDomain,
-      port: Number(process.env.PORT) || 8080,
-      secretToken: process.env.WEBHOOK_SECRET
-    }
-  });
-} else {
-  bot.launch(); // Uses long-polling – perfect for local testing
-}
-
-console.log(`🚀 WelcomeGuardBot is running... (${webhookDomain ? 'Webhook mode' : 'Polling mode'})`);
+// Graceful shutdown
+process.once('SIGINT', () => {
+  bot.stop('SIGINT');
+  pool.end();
+  process.exit(0);
+});
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM');
+  pool.end();
+  process.exit(0);
+});
