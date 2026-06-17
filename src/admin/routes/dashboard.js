@@ -37,25 +37,30 @@ router.post('/login', async (req, res) => {
     return res.render('login', { error: 'Please fill all fields', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
   }
 
-  // Simple auth: check admin status + match session password env
-  const user = await getUserByTelegramId(parseInt(telegram_id));
-  if (!user) {
-    return res.render('login', { error: 'User not found', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
-  }
+  try {
+    // Simple auth: check admin status + match session password env
+    const user = await getUserByTelegramId(parseInt(telegram_id));
+    if (!user) {
+      return res.render('login', { error: 'User not found', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
+    }
 
-  const admin = await isAdmin(parseInt(telegram_id));
-  if (!admin) {
-    return res.render('login', { error: 'Not an admin user', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
-  }
+    const admin = await isAdmin(parseInt(telegram_id));
+    if (!admin) {
+      return res.render('login', { error: 'Not an admin user', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
+    }
 
-  // Check ADMIN_PASSWORD env var (simple shared secret for dashboard)
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return res.render('login', { error: 'Invalid password', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
-  }
+    // Check ADMIN_PASSWORD env var (simple shared secret for dashboard)
+    if (password !== process.env.ADMIN_PASSWORD) {
+      return res.render('login', { error: 'Invalid password', adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
+    }
 
-  req.session.telegramId = parseInt(telegram_id);
-  req.session.username = user.first_name;
-  res.redirect('/admin');
+    req.session.telegramId = parseInt(telegram_id);
+    req.session.username = user.first_name;
+    res.redirect('/admin');
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    res.render('login', { error: `Server error: ${err.message}`, adminBaseUrl: process.env.ADMIN_BASE_URL || '' });
+  }
 });
 
 // Logout
