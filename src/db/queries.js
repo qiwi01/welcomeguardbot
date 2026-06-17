@@ -93,7 +93,7 @@ const getAllUsers = async ({ page = 1, limit = 50, status, search } = {}) => {
 
   params.push(limit, offset);
   const result = await pool.query(
-    `SELECT * FROM users ${whereClause} ORDER BY created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
+    `SELECT * FROM users ${whereClause} ORDER BY registered_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
     params
   );
 
@@ -113,7 +113,7 @@ const getUserStats = async () => {
       COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
       COUNT(*) FILTER (WHERE status = 'rejected')::int AS rejected,
       COUNT(*) FILTER (WHERE status = 'banned')::int AS banned,
-      COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '24 hours')::int AS joined_today
+      COUNT(*) FILTER (WHERE registered_at >= NOW() - INTERVAL '24 hours')::int AS joined_today
     FROM users
   `);
   return result.rows[0];
@@ -121,7 +121,7 @@ const getUserStats = async () => {
 
 const getUsersByStatus = async (status, limit = 100) => {
   const result = await pool.query(
-    'SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC LIMIT $2',
+    'SELECT * FROM users WHERE status = $1 ORDER BY registered_at DESC LIMIT $2',
     [status, limit]
   );
   return result.rows;
