@@ -1,66 +1,90 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-megaphone"></i> Broadcast</h4>
+  <h5 class="mb-0 fw-semibold"><i class="bi bi-megaphone me-2 text-warning"></i>Broadcast Messages</h5>
 </div>
 
 <% if (sent !== null) { %>
-  <div class="alert alert-success">✅ Broadcast sent! <strong><%= sent %></strong> delivered, <strong><%= failed %></strong> failed.</div>
+  <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius:10px;">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    Broadcast sent successfully! <strong><%= sent %></strong> delivered, <strong><%= failed %></strong> failed.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
 <% } %>
 
 <div class="row g-3">
-  <div class="col-md-5">
+  <div class="col-lg-5">
     <div class="card">
-      <div class="card-header">Send Message</div>
+      <div class="card-header"><i class="bi bi-send me-1 text-primary"></i>Compose Message</div>
       <div class="card-body">
         <form method="POST" action="/admin/broadcast/send">
           <div class="mb-3">
-            <label class="form-label">Message</label>
-            <textarea name="message" class="form-control" rows="6" placeholder="Write your broadcast message here..." required></textarea>
-            <div class="form-text">Supports Markdown formatting. Users will receive this as a Telegram message.</div>
+            <label class="form-label">Message <span class="text-danger">*</span></label>
+            <textarea name="message" class="form-control" rows="8" placeholder="Write your broadcast message here..." required></textarea>
+            <div class="form-text mt-2">
+              <i class="bi bi-info-circle me-1"></i>
+              Supports Telegram Markdown formatting: <code>**bold**</code>, <code>_italic_</code>, <code>```code```</code>
+            </div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Filter by Status</label>
+            <label class="form-label">Target Audience</label>
             <select name="filterStatus" class="form-select">
               <option value="">All Users</option>
-              <option value="verified">Verified Only</option>
-              <option value="pending">Pending Only</option>
-              <option value="rejected">Rejected Only</option>
+              <option value="verified">Verified Users Only</option>
+              <option value="pending">Pending Users Only</option>
+              <option value="rejected">Rejected Users Only</option>
             </select>
+            <div class="form-text">Send to all users or filter by verification status</div>
           </div>
           <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-send"></i> Send Broadcast
+            <i class="bi bi-send me-1"></i> Send Broadcast
           </button>
         </form>
       </div>
     </div>
   </div>
 
-  <div class="col-md-7">
+  <div class="col-lg-7">
     <div class="card">
-      <div class="card-header">Broadcast History</div>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i>Broadcast History</span>
+        <span class="badge bg-secondary"><%= broadcasts.length %> total</span>
+      </div>
       <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Date</th>
-              <th>Message</th>
-              <th>Sent</th>
-              <th>Failed</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% broadcasts.forEach(b => { %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
               <tr>
-                <td><small class="text-muted"><%= new Date(b.created_at).toLocaleString() %></small></td>
-                <td><small><%= b.message_text.substring(0, 80) %><%= b.message_text.length > 80 ? '...' : '' %></small></td>
-                <td><span class="badge bg-success"><%= b.sent_count %></span></td>
-                <td><span class="badge bg-danger"><%= b.failed_count %></span></td>
+                <th>Date</th>
+                <th>Message Preview</th>
+                <th class="text-center">Sent</th>
+                <th class="text-center">Failed</th>
+                <th class="text-center">Rate</th>
               </tr>
-            <% }) %>
-            <% if (broadcasts.length === 0) { %>
-              <tr><td colspan="4" class="text-center text-muted py-4">No broadcasts sent yet</td></tr>
-            <% } %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% broadcasts.forEach(b => { %>
+                <tr>
+                  <td><small class="text-muted"><%= new Date(b.created_at).toLocaleString() %></small></td>
+                  <td>
+                    <small>
+                      <%= b.message_text.substring(0, 60) %><%= b.message_text.length > 60 ? '...' : '' %>
+                    </small>
+                  </td>
+                  <td class="text-center"><span class="badge bg-success"><%= b.sent_count %></span></td>
+                  <td class="text-center"><span class="badge bg-danger"><%= b.failed_count %></span></td>
+                  <td class="text-center">
+                    <% const total = b.sent_count + b.failed_count; %>
+                    <span class="badge bg-<%= total > 0 && b.failed_count / total > 0.5 ? 'danger' : 'success' %>">
+                      <%= total > 0 ? Math.round(b.sent_count / total * 100) : 0 %>%
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+              <% if (broadcasts.length === 0) { %>
+                <tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-megaphone d-block mb-2" style="font-size:2rem;"></i>No broadcasts sent yet</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

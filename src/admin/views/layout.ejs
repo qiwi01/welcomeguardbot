@@ -3,51 +3,258 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WelcomeGuardBot Admin</title>
+  <title>WelcomeGuardBot Admin Panel</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { background: #f5f7fb; font-size: .9rem; }
-    .sidebar { background: #1a1d23; min-height: 100vh; }
-    .sidebar .nav-link { color: #8b8e96; padding: .7rem 1rem; border-radius: 8px; margin-bottom: 2px; }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: #2a2d35; }
-    .sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-    .stat-card { border-radius: 12px; border: none; transition: transform .15s; }
-    .stat-card:hover { transform: translateY(-2px); }
-    .stat-card .stat-icon { font-size: 2rem; opacity: .8; }
-    .badge-status { font-size: .75rem; padding: .35em .65em; }
-    .table-hover tbody tr { cursor: pointer; }
-    .footer-bar { background: #fff; border-top: 1px solid #e9ecef; padding: 12px 0; margin-top: 2rem; }
+    :root {
+      --sidebar-width: 260px;
+      --primary-dark: #0f172a;
+      --sidebar-bg: #1e293b;
+      --sidebar-hover: #334155;
+      --accent: #3b82f6;
+      --accent-light: #60a5fa;
+      --card-border: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+    * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #f1f5f9; font-size: .875rem; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width);
+      background: var(--sidebar-bg); z-index: 1000; transition: transform .3s;
+      overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 1.25rem 1.25rem; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand .brand-icon {
+      width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+      color: #fff; flex-shrink: 0;
+    }
+    .sidebar-brand h5 { color: #fff; font-weight: 600; margin: 0; font-size: 1rem; }
+    .sidebar-brand small { color: var(--text-muted); font-size: .7rem; display: block; }
+
+    .sidebar-nav { padding: .75rem; }
+    .sidebar-nav .nav-label {
+      font-size: .65rem; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); padding: .75rem .75rem .5rem; font-weight: 600;
+    }
+    .sidebar-nav .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: .65rem .75rem;
+      border-radius: 8px; color: #cbd5e1; text-decoration: none;
+      transition: all .15s; margin-bottom: 2px; font-size: .875rem;
+    }
+    .sidebar-nav .nav-link i { width: 20px; text-align: center; font-size: 1.05rem; }
+    .sidebar-nav .nav-link .badge { margin-left: auto; }
+    .sidebar-nav .nav-link:hover { background: var(--sidebar-hover); color: #fff; }
+    .sidebar-nav .nav-link.active {
+      background: var(--accent); color: #fff; font-weight: 500;
+      box-shadow: 0 4px 12px rgba(59,130,246,.35);
+    }
+    .sidebar-nav .nav-link.active i { color: #fff; }
+
+    .sidebar-footer {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-footer small { color: var(--text-muted); font-size: .7rem; }
+
+    /* Main content */
+    .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    .topbar {
+      background: #fff; padding: .75rem 1.5rem; display: flex;
+      align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--card-border); position: sticky; top: 0; z-index: 999;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .topbar h5 { font-weight: 600; margin: 0; font-size: 1rem; }
+    .topbar .breadcrumb { margin: 0; font-size: .8rem; background: transparent; }
+    .topbar .breadcrumb-item a { color: var(--accent); text-decoration: none; }
+
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .topbar-right .user-avatar {
+      width: 34px; height: 34px; background: var(--accent); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: .85rem;
+    }
+    .topbar-right .dropdown-toggle { cursor: pointer; }
+    .topbar-right .dropdown-toggle::after { display: none; }
+
+    .page-content { padding: 1.5rem; }
+
+    /* Cards */
+    .card {
+      border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      transition: box-shadow .2s;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .card-header {
+      background: transparent; border-bottom: 1px solid var(--card-border);
+      font-weight: 600; padding: .85rem 1.25rem;
+    }
+
+    /* Stat cards */
+    .stat-card {
+      border-radius: 12px; border: none; position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+    .stat-card .stat-icon {
+      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      font-size: 2.5rem; opacity: .15;
+    }
+    .stat-card .stat-value { font-size: 1.75rem; font-weight: 700; margin: 0; }
+    .stat-card .stat-label { font-size: .8rem; opacity: .8; margin: 0; }
+
+    /* Tables */
+    .table th { font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); }
+    .table td { vertical-align: middle; font-size: .85rem; }
+    .table-hover tbody tr { transition: background .1s; cursor: pointer; }
+    .table-hover tbody tr:hover { background: #f8fafc; }
+
+    /* Badges */
+    .badge { font-weight: 500; padding: .35em .7em; font-size: .75rem; border-radius: 6px; }
+
+    /* Buttons */
+    .btn { border-radius: 8px; font-weight: 500; font-size: .85rem; padding: .5rem 1rem; }
+    .btn-sm { padding: .35rem .7rem; font-size: .8rem; border-radius: 6px; }
+
+    /* Forms */
+    .form-control, .form-select { border-radius: 8px; font-size: .875rem; border-color: #e2e8f0; padding: .55rem .85rem; }
+    .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .form-label { font-weight: 500; font-size: .82rem; margin-bottom: .35rem; }
+
+    /* Pagination */
+    .pagination .page-link { border-radius: 8px; margin: 0 2px; font-size: .8rem; border: 1px solid #e2e8f0; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn .3s ease-out; }
+
+    /* Mobile toggle */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.show { transform: translateX(0); }
+      .sidebar-overlay.show { display: block; }
+      .main-content { margin-left: 0; }
+    }
+
+    /* Toast notifications */
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 99999; }
+    .toast { border-radius: 10px; border: none; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+
+    /* Activity timeline */
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline-item { position: relative; padding: 0 0 1rem 1.75rem; border-left: 2px solid #e2e8f0; margin-left: 6px; }
+    .timeline-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+    .timeline-dot {
+      position: absolute; left: -8px; top: 0; width: 14px; height: 14px;
+      border-radius: 50%; border: 2px solid #fff;
+    }
+    .timeline-dot.success { background: #22c55e; }
+    .timeline-dot.warning { background: #f59e0b; }
+    .timeline-dot.danger { background: #ef4444; }
+    .timeline-dot.info { background: #3b82f6; }
+    .timeline-dot.dark { background: #1e293b; }
   </style>
 </head>
 <body>
-  <div class="container-fluid">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-md-2 sidebar p-3 d-none d-md-block">
-        <div class="text-white mb-4 mt-2">
-          <h5><i class="bi bi-shield-check"></i> WGB Admin</h5>
-        </div>
-        <nav class="nav flex-column">
-          <a class="nav-link" href="/admin"><i class="bi bi-speedometer2"></i> Dashboard</a>
-          <a class="nav-link" href="/admin/users"><i class="bi bi-people"></i> Users</a>
-          <a class="nav-link" href="/admin/broadcast"><i class="bi bi-megaphone"></i> Broadcast</a>
-          <a class="nav-link" href="/admin/logs"><i class="bi bi-clock-history"></i> Logs</a>
-          <hr class="text-secondary">
-          <a class="nav-link" href="/admin/logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
-        </nav>
-        <div class="mt-auto text-secondary small position-absolute" style="bottom: 20px;">
-          v1.0.0
-        </div>
-      </div>
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-      <!-- Main Content -->
-      <div class="col-md-10 ms-auto p-4">
-        <%- body %>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+      <div>
+        <h5>WelcomeGuardBot</h5>
+        <small>Admin Panel v2.0</small>
       </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/admin">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a class="nav-link <%= currentPage === 'users' ? 'active' : '' %>" href="/admin/users">
+        <i class="bi bi-people"></i> Users
+      </a>
+      <a class="nav-link <%= currentPage === 'broadcast' ? 'active' : '' %>" href="/admin/broadcast">
+        <i class="bi bi-megaphone"></i> Broadcast
+      </a>
+      <a class="nav-link <%= currentPage === 'logs' ? 'active' : '' %>" href="/admin/logs">
+        <i class="bi bi-clock-history"></i> Activity Logs
+      </a>
+
+      <div class="nav-label mt-3">Account</div>
+      <a class="nav-link" href="/admin/logout">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+
+    <div class="sidebar-footer d-none d-md-block">
+      <small><i class="bi bi-shield-shaded"></i> WelcomeGuardBot v2.0</small>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <h5><%= pageTitle || 'Dashboard' %></h5>
+      </div>
+      <div class="topbar-right">
+        <div class="dropdown">
+          <div class="d-flex align-items-center gap-2 dropdown-toggle" data-bs-toggle="dropdown">
+            <div class="user-avatar"><%= (username || 'A').charAt(0).toUpperCase() %></div>
+            <div class="d-none d-sm-block text-start">
+              <small class="d-block fw-semibold" style="line-height:1.2;"><%= username || 'Admin' %></small>
+              <small class="text-muted" style="font-size:.7rem;">Administrator</small>
+            </div>
+            <i class="bi bi-chevron-down text-muted" style="font-size:.7rem;"></i>
+          </div>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:10px;border:none;min-width:180px;">
+            <li><a class="dropdown-item" href="/admin"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="/admin/logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content fade-in">
+      <%- body %>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    // Auto-dismiss alerts after 5s
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.alert-dismissible').forEach(function(el) {
+        setTimeout(function() { el.classList.add('fade'); setTimeout(() => el.remove(), 300); }, 5000);
+      });
+    });
+  </script>
 </body>
 </html>

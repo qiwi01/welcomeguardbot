@@ -1,50 +1,58 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0"><i class="bi bi-clock-history"></i> Activity Logs</h4>
+  <h5 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2 text-info"></i>Activity Logs</h5>
+  <span class="badge bg-secondary"><%= logs.length %> entries</span>
 </div>
 
 <div class="card">
   <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>User</th>
-          <th>Action</th>
-          <th>Admin</th>
-          <th>Notes</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% logs.forEach((log, i) => { %>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
           <tr>
-            <td><small class="text-muted"><%= i + 1 %></small></td>
-            <td>
-              <strong><%= log.first_name %></strong>
-              <% if (log.username) { %><small>@<%= log.username %></small><% } %>
-            </td>
-            <td>
-              <% if (log.action === 'verified') { %>
-                <span class="badge bg-success">✅ Approved</span>
-              <% } else if (log.action === 'rejected') { %>
-                <span class="badge bg-danger">❌ Rejected</span>
-              <% } else if (log.action === 'requested') { %>
-                <span class="badge bg-info">📝 Registered</span>
-              <% } else if (log.action === 'banned') { %>
-                <span class="badge bg-dark">🚫 Banned</span>
-              <% } else { %>
-                <span class="badge bg-secondary"><%= log.action %></span>
-              <% } %>
-            </td>
-            <td><code><%= log.performed_by %></code></td>
-            <td><small><%= log.notes || '—' %></small></td>
-            <td><small class="text-muted"><%= new Date(log.created_at).toLocaleString() %></small></td>
+            <th style="width:40px;">#</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Admin</th>
+            <th>Notes</th>
+            <th>Date & Time</th>
           </tr>
-        <% }) %>
-        <% if (logs.length === 0) { %>
-          <tr><td colspan="6" class="text-center text-muted py-4">No activity recorded</td></tr>
-        <% } %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% logs.forEach((log, i) => { %>
+            <tr>
+              <td><small class="text-muted"><%= i + 1 %></small></td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div style="width:28px;height:28px;background:#e2e8f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;color:#475569;flex-shrink:0;"><%= (log.first_name || '?').charAt(0).toUpperCase() %></div>
+                  <div>
+                    <div class="fw-semibold" style="font-size:.85rem;"><%= log.first_name %></div>
+                    <% if (log.username) { %><small class="text-muted">@<%= log.username %></small><% } %>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <% if (log.action === 'verified') { %>
+                  <span class="badge bg-success">✅ Approved</span>
+                <% } else if (log.action === 'rejected') { %>
+                  <span class="badge bg-danger">❌ Rejected</span>
+                <% } else if (log.action === 'requested') { %>
+                  <span class="badge bg-info">📝 Registered</span>
+                <% } else if (log.action === 'banned') { %>
+                  <span class="badge bg-dark">🚫 Banned</span>
+                <% } else { %>
+                  <span class="badge bg-secondary"><%= log.action %></span>
+                <% } %>
+              </td>
+              <td><code style="font-size:.75rem;"><%= log.performed_by === 'Self' ? 'Self' : '#' + log.performed_by %></code></td>
+              <td><small><%= log.notes || '—' %></small></td>
+              <td><small class="text-muted"><%= new Date(log.created_at).toLocaleString() %></small></td>
+            </tr>
+          <% }) %>
+          <% if (logs.length === 0) { %>
+            <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-activity d-block mb-2" style="font-size:2rem;"></i>No activity recorded yet</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

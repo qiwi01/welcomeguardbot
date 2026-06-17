@@ -82,6 +82,8 @@ router.get('/', requireAdmin, async (req, res) => {
     recentLogs,
     recentBroadcasts,
     username: req.session.username,
+    currentPage: 'dashboard',
+    pageTitle: 'Dashboard',
   });
 });
 
@@ -101,6 +103,8 @@ router.get('/users', requireAdmin, async (req, res) => {
     currentStatus: status,
     currentSearch: search,
     username: req.session.username,
+    currentPage: 'users',
+    pageTitle: 'User Management',
   });
 });
 
@@ -115,6 +119,8 @@ router.get('/users/:telegramId', requireAdmin, async (req, res) => {
     user,
     logs: logs.filter(l => l.user_id === user.id),
     username: req.session.username,
+    currentPage: 'users',
+    pageTitle: `User: ${user.first_name}`,
   });
 });
 
@@ -141,7 +147,7 @@ router.post('/users/:telegramId/action', requireAdmin, async (req, res) => {
 // Broadcast page
 router.get('/broadcast', requireAdmin, async (req, res) => {
   const broadcasts = await getBroadcasts(20);
-  res.render('broadcast', { broadcasts, username: req.session.username, sent: null, failed: null });
+  res.render('broadcast', { broadcasts, username: req.session.username, sent: null, failed: null, currentPage: 'broadcast', pageTitle: 'Broadcast Messages' });
 });
 
 // Send broadcast
@@ -175,13 +181,13 @@ router.post('/broadcast/send', requireAdmin, async (req, res) => {
   await saveBroadcast(req.session.telegramId, message, sent, failed);
 
   const broadcasts = await getBroadcasts(20);
-  res.render('broadcast', { broadcasts, username: req.session.username, sent, failed });
+  res.render('broadcast', { broadcasts, username: req.session.username, sent, failed, currentPage: 'broadcast', pageTitle: 'Broadcast Messages' });
 });
 
 // Logs
 router.get('/logs', requireAdmin, async (req, res) => {
   const logs = await getVerificationLogs({ limit: 100 });
-  res.render('logs', { logs, username: req.session.username });
+  res.render('logs', { logs, username: req.session.username, currentPage: 'logs', pageTitle: 'Activity Logs' });
 });
 
 module.exports = router;
