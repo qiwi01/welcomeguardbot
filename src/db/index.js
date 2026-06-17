@@ -5,7 +5,10 @@ const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  ssl: process.env.DATABASE_URL?.includes('supabase.co')
+  ssl: process.env.DATABASE_URL && (
+    process.env.DATABASE_URL.includes('supabase.co') ||
+    process.env.DATABASE_URL.includes('pooler.supabase.com')
+  )
     ? { rejectUnauthorized: false }
     : false,
 });
