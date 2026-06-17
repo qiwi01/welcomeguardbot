@@ -56,6 +56,11 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/admin/views'));
 
+// Layout engine
+const expressLayouts = require('express-ejs-layouts');
+app.use(expressLayouts);
+app.set('layout', 'layout');
+
 // Admin routes
 const adminRoutes = require('./src/admin/routes/dashboard');
 app.use('/admin', adminRoutes);
